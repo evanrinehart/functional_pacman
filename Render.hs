@@ -36,8 +36,7 @@ game units: 1 unit is
 data RenderEnv = RenderEnv
   {
     font' :: Font,
-    winh' :: R,
-    winw' :: R
+    fff' :: R2 -> Affine
   }
 
 type Render = ReaderT RenderEnv IO
@@ -45,21 +44,31 @@ type Render = ReaderT RenderEnv IO
 draw :: Snapshot -> Render ()
 draw snap = do
   font <- asks font'
-  winh <- asks winh'
-  winw <- asks winw'
-  let wt size xy foo = foo
+  fff <- asks fff'
   let square = regularPoly 4
   let msg = text font (show snap)
-  let scene = wt 1 (1,1) square <> wt 1 (3,1) msg
+  let scene = (fff (0,0) %% square) <> (fff (0,0) %% msg)
   liftIO (render scene)
 
-
 --------
 --------
-
 
 setup :: Int -> Int -> IO RenderEnv
 setup w h = RenderEnv <$>
   openFont "DroidSansMono.ttf" <*>
-  pure (realToFrac w) <*>
-  pure (realToFrac h)
+  pure (mkGlobalTransform w h)
+
+mkGlobalTransform :: Int -> Int -> R2 -> Affine
+mkGlobalTransform w h x = fff where
+  gameUnitsPerWindowHeight = 40
+  gameOrigin = (0,0)
+  sss = 2 / gameUnitsPerWindowHeight
+  w' = realToFrac w
+  h' = realToFrac h
+  aspect = h' / w'
+  fff =
+    translate (-1,-1) <>
+    inverse (scale 1 aspect) <>
+    scale sss sss <>
+    translate x <>
+    translate gameOrigin

@@ -15,17 +15,23 @@ import PressRelease
 winw = 480
 winh = 640
 
--- main will set up the components and glfw loop
+{-
+main instantiates the game components and
+implements the support system that produces vsync and keyboard events
+which drive the game.
+-}
+
 main :: IO ()
 main = do
   appEnv <- App.setup winw winh
-  app appEnv
+  driveApp appEnv
 
-app :: AppEnv -> IO ()
-app appEnv = do
+driveApp :: AppEnv -> IO ()
+driveApp appEnv = do
   GLFW.setErrorCallback $ Just simpleErrorCallback
   r <- GLFW.init
   when r $ do
+    GLFW.windowHint (GLFW.WindowHint'Resizable False)
     m <- GLFW.createWindow winw winh "Pacman" Nothing Nothing
     case m of
       Nothing -> GLFW.terminate
