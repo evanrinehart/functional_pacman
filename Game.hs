@@ -10,7 +10,7 @@ import Joystick
 
 type Game = ReaderT GameEnv IO
 
-data Snapshot = Snapshot
+data Snapshot = Snapshot deriving (Show)
 
 data GameEnv = GameEnv
   {

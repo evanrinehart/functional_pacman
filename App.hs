@@ -8,7 +8,8 @@ import qualified Graphics.UI.GLFW as GLFW
 
 import qualified Game
 import Game (Game, GameEnv, Snapshot)
-import qualified Gfx
+import Render (RenderEnv)
+import qualified Render
 import Dpad (DpadState)
 import qualified Dpad
 import Joystick
@@ -16,12 +17,20 @@ import PressRelease
 import Dir
 import DeltaClock
 
+-- app provides a vsync and keyboard interface
+-- it is implemented with
+--   a game simulation,
+--   a renderer,
+--   a clock,
+--   and a dpad state machine
+
 type App = ReaderT AppEnv IO
 
 data AppEnv = AppEnv
   {
     gameEnv :: GameEnv,
     dpadTV :: TVar DpadState,
+    renderEnv :: RenderEnv,
     sinceLast' :: IO Double
   }
 
@@ -74,7 +83,9 @@ runGame command = do
   liftIO $ runReaderT command ge
 
 draw :: Snapshot -> App ()
-draw = liftIO . Gfx.draw 
+draw snapshot = do
+  re <- asks renderEnv
+  liftIO $ runReaderT (Render.draw snapshot) re
 
 sinceLast :: App Double
 sinceLast = asks sinceLast' >>= liftIO
@@ -91,10 +102,11 @@ useDpad d = do
     Just j -> joystick j
     Nothing -> return ()
 
-setup :: IO AppEnv
-setup = AppEnv <$>
+setup :: Int -> Int -> IO AppEnv
+setup w h = AppEnv <$>
   Game.setup <*>
   Dpad.setup <*>
+  Render.setup w h <*>
   newDeltaClock
 
 debug :: Show a => a -> App ()

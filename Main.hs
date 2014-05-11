@@ -12,15 +12,17 @@ import Game
 import App
 import PressRelease
 
+winw = 480
+winh = 640
+
 -- main will set up the components and glfw loop
 main :: IO ()
 main = do
-  appEnv <- App.setup
+  appEnv <- App.setup winw winh
   app appEnv
 
 app :: AppEnv -> IO ()
 app appEnv = do
-  let (winw, winh) = (480, 640)
   GLFW.setErrorCallback $ Just simpleErrorCallback
   r <- GLFW.init
   when r $ do
@@ -37,8 +39,8 @@ app appEnv = do
         fix $ \loop -> do
           GLFW.pollEvents
           GLFW.swapBuffers win
-          runReaderT vsync appEnv
           GL.clear [GL.ColorBuffer, GL.DepthBuffer]
+          runReaderT vsync appEnv
           continue <- fmap not (GLFW.windowShouldClose win)
           when continue loop
 
