@@ -24,21 +24,22 @@ dpad ev = do
   return mj
 
 transition :: PressRelease Dir -> DpadState -> (Maybe Joystick, DpadState)
-transition (Press d) Free = (Just (Joy d), Hold1 d)
-transition (Release _) Free = (Nothing, Free)
-transition (Press d) (Hold1 dh)
-  | d == dh = (Nothing, Hold1 dh)
-  | otherwise = (Just (Joy d), Hold2 d dh)
-transition (Release d) (Hold1 dh)
-  | d == dh = (Just JoyNeutral, Free)
-  | otherwise = (Nothing, Hold1 dh)
-transition (Press d) s@(Hold2 dh _)
-  | d == dh = (Nothing, s)
-  | otherwise = (Just (Joy d), Hold2 d dh)
-transition (Release d) s@(Hold2 dh1 dh2)
-  | d == dh1 = (Just (Joy dh2), Hold1 dh2)
-  | d == dh2 = (Nothing, Hold1 dh1)
-  | otherwise = (Nothing, s)
+transition ev s = case s of
+  Free -> case ev of
+    Press d               -> (Just (Joy d),    Hold1 d    )
+    Release _             -> (Nothing,         Free       )
+  Hold1 dh -> case ev of
+    Press d   | d == dh   -> (Nothing,         Hold1 dh   )
+              | otherwise -> (Just (Joy d),    Hold2 d dh )
+    Release d | d == dh   -> (Just JoyNeutral, Free       )
+              | otherwise -> (Nothing,         Hold1 dh   )
+  Hold2 dh1 dh2 -> case ev of
+    Press d   | d == dh1  -> (Nothing,         s          )
+              | otherwise -> (Just (Joy d),    Hold2 d dh1)
+    Release d | d == dh1  -> (Just (Joy dh2),  Hold1 dh2  )
+              | d == dh2  -> (Nothing,         Hold1 dh1  )
+              | otherwise -> (Nothing,         s          )
+
 
 ---
 
