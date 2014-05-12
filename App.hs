@@ -7,7 +7,7 @@ import System.Exit
 import qualified Graphics.UI.GLFW as GLFW
 
 import qualified Game
-import Game (Game, GameEnv, Snapshot)
+import Game (Game, GameEnv)
 import Render (RenderEnv)
 import qualified Render
 import Dpad (DpadState)
@@ -16,6 +16,7 @@ import Joystick
 import PressRelease
 import Dir
 import DeltaClock
+import Snapshot (Snapshot)
 
 -- app provides a vsync and keyboard interface
 -- it is implemented with
@@ -85,7 +86,7 @@ runGame command = do
 draw :: Snapshot -> App ()
 draw snapshot = do
   re <- asks renderEnv
-  liftIO $ runReaderT (Render.draw snapshot) re
+  liftIO $ Render.draw re snapshot
 
 sinceLast :: App Double
 sinceLast = asks sinceLast' >>= liftIO

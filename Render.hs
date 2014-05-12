@@ -2,36 +2,11 @@ module Render where
 
 import Graphics.DrawingCombinators
 import Control.Monad.Reader
+import Control.Monad.Writer
 import Control.Applicative
 import Data.Monoid
 
-import Game
-
-{-
-coordinate system notes
-
-the default rendering coordinate system is [-1,1] x [-1,1] on the window
-the window pixels are actually [0,winw] x [0,winh]
-and the game has its own coordinate system
-
-we will consider the default coordinate system the space in which to
-describe sprites and other objects that will be placed in the world
-
-to place such an object on the screen, we must transform by choosing
-these things:
-how large is the object in game coordinates?
-where is the object in game coordinates?
-
-once we answer these, we can put the thing on the screen by using the
-world transformation which takes things of size 1 (game units) and 
-draws them N pixels tall, where N is the length of 1 game unit in pixels.
-note that this transformation always takes a thing with game size 1x1
-and shows it in a square area on the screen regardless of window dimensions.
-
-game coord origin: 0,0 is the top left of the screen
-game units: 1 unit is 
-
--}
+import Snapshot
 
 data RenderEnv = RenderEnv
   {
@@ -39,16 +14,41 @@ data RenderEnv = RenderEnv
     fff' :: R2 -> Affine
   }
 
-type Render = ReaderT RenderEnv IO
+type Render = WriterT (Image Any) (Reader RenderEnv)
 
-draw :: Snapshot -> Render ()
-draw snap = do
+draw :: RenderEnv -> Snapshot -> IO ()
+draw env snap = do
+  let (_, img) = runReader (runWriterT (drawSnapshot snap)) env
+  render img
+
+drawSnapshot :: Snapshot -> Render ()
+drawSnapshot snap = do
   font <- asks font'
+  writeAt (2,3) square
+  let msg = scale 0.5 0.5 %% text font (show snap)
+  writeAt (0,4) msg
+  forM_ [0..23] $ \i -> do
+    writeAt (i,0) (line (0,0) (0,1))
+    writeAt (i,0) (scale 0.3 0.3 %% tint green (text font (show (floor i))))
+  writeAt (4,4) yellowCircle
+
+writeAt :: R2 -> Image Any -> Render ()
+writeAt x img = do
   fff <- asks fff'
-  let square = regularPoly 4
-  let msg = text font (show snap)
-  let scene = (fff (0,0) %% square) <> (fff (0,0) %% msg)
-  liftIO (render scene)
+  tell (fff x %% img)
+
+square :: Image Any
+square =
+  tint green $
+  scale 0.3 0.3 %%
+  convexPoly [(-1,-1),(-1,1),(1,1),(1,-1)]
+
+yellowCircle :: Image Any
+yellowCircle = scale 0.5 0.5 %% tint yellow circle
+
+yellow = Color 1 1 0 1
+green = Color 0 1 0 1
+blue = Color 0 0 1 1
 
 --------
 --------
@@ -60,9 +60,10 @@ setup w h = RenderEnv <$>
 
 mkGlobalTransform :: Int -> Int -> R2 -> Affine
 mkGlobalTransform w h x = fff where
-  gameUnitsPerWindowHeight = 40
+  gameUnitsPerWindowWidth = 24
+  gameAreaHeight = 32
   gameOrigin = (0,0)
-  sss = 2 / gameUnitsPerWindowHeight
+  sss = 2 / gameUnitsPerWindowWidth
   w' = realToFrac w
   h' = realToFrac h
   aspect = h' / w'
@@ -72,3 +73,15 @@ mkGlobalTransform w h x = fff where
     scale sss sss <>
     translate x <>
     translate gameOrigin
+
+
+{-
+the game area is coordinatized by a grid
+the grid is 24 units wide and 40 units tall
+the area extends from the left side of the screen to the right side
+the origin is in the bottom left corner, which is in the bottom
+left corner of the screen. if the window is too wide to show the
+entire vertical extent of the game area, then the top will be cut off.
+if the screen is too narrow, the area above the game area will be
+black.
+-}

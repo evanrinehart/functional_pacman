@@ -7,23 +7,28 @@ import Control.Applicative
 import Level
 import Linear
 import Joystick
+import Snapshot (Snapshot(Snapshot))
+import Fruit
 
 type Game = ReaderT GameEnv IO
-
-data Snapshot = Snapshot deriving (Show)
 
 data GameEnv = GameEnv
   {
 --    level :: TVar Level,
 --    pacPath :: TVar Path
-    dummy :: TVar Integer
+    score' :: TVar Integer
   }
 
 slip :: T -> Game ()
 slip dt = return ()
 
 peek :: Game Snapshot
-peek = return Snapshot
+peek = do
+  env <- ask
+  liftIO . atomically $
+    Snapshot <$>
+      readTVar (score' env) <*>
+      pure [Pomo, Banano]
 
 joystick :: Joystick -> Game ()
 joystick j = liftIO (print j)
@@ -37,4 +42,4 @@ insertCoin = liftIO (putStrLn "insertCoin")
 ---
 
 setup :: IO GameEnv
-setup = GameEnv <$> newTVarIO 3
+setup = GameEnv <$> newTVarIO 999990
