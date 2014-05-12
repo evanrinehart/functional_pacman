@@ -12,7 +12,8 @@ data Level = Level
     edges :: [Edge],
     nodes :: (Node, [Node]), -- empty level impossible
     layout :: Map NodeId R2,
-    start :: L
+    start :: L,
+    jailNodes :: (Node, Node, Node)
   }
 
 data Node = Node NodeId [Edge] | Jail NodeId [Edge]
@@ -33,12 +34,13 @@ levelMotion :: Path -> Speed -> Signal L
 levelMotion (Path l nodes) speed = pure l
 
 trivialLevel :: Level
-trivialLevel = Level es ns lo st where
+trivialLevel = Level es ns lo st js where
   es = []
   n0 = Node 0 []
   ns = (n0, [])
   lo = M.fromList [(0,(0,0))]
   st = LN n0
+  js = (n0, n0, n0)
 
 nodeId :: Node -> NodeId
 nodeId (Node nid _) = nid

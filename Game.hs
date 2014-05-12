@@ -4,10 +4,11 @@ import Control.Concurrent.STM
 import Control.Monad.Reader
 import Control.Applicative
 
+import GameTypes
 import Level
 import Linear
 import Joystick
-import Snapshot (Snapshot(Snapshot))
+import Snapshot
 import Fruit
 import MazeA
 
@@ -27,12 +28,19 @@ slip dt = return ()
 peek :: Game Snapshot
 peek = do
   env <- ask
-  liftIO . atomically $
-    Snapshot <$>
-      readTVar (score' env) <*>
-      pure (level' env) <*>
-      pure [Pomo, Banano]
-      
+  liftIO . atomically $ Snapshot
+    <$> readTVar (score' env)
+    <*> pure 999990
+    <*> pure (level' env)
+    <*> pure (Right (someL (level' env), Munch0, FacingNowhere))
+    <*> pure Nothing
+    <*> pure []
+    <*> pure []
+    <*> pure []
+    <*> pure []
+    <*> pure []
+    <*> pure []
+    <*> pure [Pomo, Banano]
 
 joystick :: Joystick -> Game ()
 joystick j = liftIO (print j)
@@ -41,7 +49,11 @@ pressStart :: Game ()
 pressStart = liftIO (putStrLn "pressStart")
 
 insertCoin :: Game ()
-insertCoin = liftIO (putStrLn "insertCoin")
+insertCoin = do
+  s <- peek
+  liftIO (print s)
+
+--liftIO (putStrLn "insertCoin")
 
 ---
 

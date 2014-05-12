@@ -34,11 +34,12 @@ edges = 87
 
 mazeA :: Level
 mazeA = lvl where
-  lvl = Level edges' nodes' layout' start'
+  lvl = Level edges' nodes' layout' start' jails'
   n = Node
   j = Jail
   e = Edge
   start' = LE e44 0.5
+  jails' = (n33, n34, n35)
   n0 = n 0 [e0,e1]
   n1 = n 1 [e0,e2]
   n3 = n 3 [e2,e3]
