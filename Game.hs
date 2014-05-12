@@ -9,6 +9,7 @@ import Linear
 import Joystick
 import Snapshot (Snapshot(Snapshot))
 import Fruit
+import MazeA
 
 type Game = ReaderT GameEnv IO
 
@@ -16,7 +17,8 @@ data GameEnv = GameEnv
   {
 --    level :: TVar Level,
 --    pacPath :: TVar Path
-    score' :: TVar Integer
+    score' :: TVar Integer,
+    level' :: Level
   }
 
 slip :: T -> Game ()
@@ -28,7 +30,9 @@ peek = do
   liftIO . atomically $
     Snapshot <$>
       readTVar (score' env) <*>
+      pure (level' env) <*>
       pure [Pomo, Banano]
+      
 
 joystick :: Joystick -> Game ()
 joystick j = liftIO (print j)
@@ -42,4 +46,6 @@ insertCoin = liftIO (putStrLn "insertCoin")
 ---
 
 setup :: IO GameEnv
-setup = GameEnv <$> newTVarIO 999990
+setup = GameEnv <$>
+  newTVarIO 999990 <*>
+  pure (mazeA)

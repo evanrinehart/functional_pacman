@@ -58,31 +58,6 @@ instance Show Node where
   show (Node nid _) = "N"++(show nid)
   show (Jail nid _) = "J"++(show nid)
 
-{- coords
-we use R2 as coordinates in three ways
-
-[0,16] x [0,18]
-first the level defines a mapping from nodes to R2
-this R2 should be "game space" where 0 is the left side of the screen
-and maze columns increase to the right by 1. similarly for rows, 0 at the
-top and each row increases y coord by 1 as you go down. these coordinates
-are fed to the renderer. my reference maze has 17 columns and 19 rows.
-
-[0,640] x [0,480]
-the renderer must map game coordinates to a rectangular space, making sure
-to wrap the negative and greater-than-max x values according to the cylindrical
-topology of the game. this coordinate system should put the left side of the
-max at 0 x, and increase by 1 for each pixel, more closely resembling what we want.
-this should push the maze over to the center of screen.
-
-[-1,1] x [-1,1]
-a final transformation is done by the renderer to account for aspect ratio
-and mapping from the pixel based coordinates to one where the entire window
-is mapped to the region [-1,-1] x [1,1] according to graphics drawing combinators.
-
--}
-
--- a point in the level
 -- a set of all such points forms a metric space
 crossesL :: Path -> L -> Maybe (T,L)
 crossesL path l = Nothing
